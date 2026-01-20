@@ -1,0 +1,708 @@
+import IPython.display as display
+
+html_content = """
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DreamTrip AI - Tamil Nadu Smart Travel</title>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: #333;
+            min-height: 100vh;
+            padding: 20px;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 20px;
+            padding: 30px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+        }
+        header {
+            text-align: center;
+            margin-bottom: 40px;
+            padding-bottom: 20px;
+            border-bottom: 2px solid #667eea;
+        }
+        h1 {
+            color: #2c3e50;
+            font-size: 2.8rem;
+            margin-bottom: 10px;
+            background: linear-gradient(45deg, #667eea, #764ba2);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        .tagline {
+            color: #7f8c8d;
+            font-size: 1.2rem;
+            margin-bottom: 20px;
+        }
+        .language-toggle {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            margin: 20px 0;
+        }
+        .lang-btn {
+            padding: 10px 25px;
+            border: 2px solid #667eea;
+            background: transparent;
+            color: #667eea;
+            border-radius: 25px;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-weight: bold;
+        }
+        .lang-btn.active {
+            background: #667eea;
+            color: white;
+        }
+        .input-section {
+            background: #f8f9fa;
+            border-radius: 15px;
+            padding: 25px;
+            margin: 30px 0;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.05);
+        }
+        textarea {
+            width: 100%;
+            min-height: 150px;
+            padding: 20px;
+            border: 2px solid #e0e0e0;
+            border-radius: 10px;
+            font-size: 1.1rem;
+            resize: vertical;
+            transition: border 0.3s;
+        }
+        textarea:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+        .example-buttons {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin: 15px 0;
+        }
+        .example-btn {
+            background: white;
+            border: 1px dashed #667eea;
+            color: #667eea;
+            padding: 8px 15px;
+            border-radius: 20px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.3s;
+        }
+        .example-btn:hover {
+            background: #667eea;
+            color: white;
+        }
+        .action-buttons {
+            display: flex;
+            gap: 15px;
+            margin-top: 20px;
+            flex-wrap: wrap;
+        }
+        .btn {
+            padding: 14px 30px;
+            border: none;
+            border-radius: 10px;
+            font-size: 1rem;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+        }
+        .btn-primary {
+            background: linear-gradient(45deg, #4facfe 0%, #00f2fe 100%);
+            color: white;
+            flex: 1;
+        }
+        .btn-secondary {
+            background: white;
+            color: #667eea;
+            border: 2px solid #667eea;
+        }
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2);
+        }
+        .results-section {
+            display: none;
+            margin-top: 40px;
+        }
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin-bottom: 40px;
+        }
+        .stat-card {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 25px;
+            border-radius: 10px;
+            text-align: center;
+            box-shadow: 0 10px 20px rgba(102, 126, 234, 0.3);
+        }
+        .stat-card h3 {
+            font-size: 1rem;
+            margin-bottom: 10px;
+            opacity: 0.9;
+        }
+        .stat-card p {
+            font-size: 2rem;
+            font-weight: bold;
+        }
+        .carbon-meter {
+            height: 20px;
+            background: #e9ecef;
+            border-radius: 10px;
+            overflow: hidden;
+            margin: 20px 0;
+            position: relative;
+        }
+        .carbon-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #4CAF50, #FFC107, #F44336);
+            transition: width 1s ease;
+        }
+        .carbon-labels {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 5px;
+            font-size: 0.9rem;
+            color: #7f8c8d;
+        }
+        .map-container {
+            height: 400px;
+            border-radius: 10px;
+            overflow: hidden;
+            margin: 30px 0;
+            border: 3px solid #667eea;
+        }
+        .itinerary-days {
+            margin-top: 40px;
+        }
+        .day-card {
+            background: white;
+            border-left: 5px solid #667eea;
+            padding: 25px;
+            margin: 20px 0;
+            border-radius: 10px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.05);
+        }
+        .activity {
+            display: flex;
+            align-items: center;
+            padding: 15px;
+            margin: 10px 0;
+            background: #f8f9fa;
+            border-radius: 8px;
+            transition: transform 0.3s;
+        }
+        .activity:hover {
+            transform: translateX(10px);
+            background: #e3f2fd;
+        }
+        .time-badge {
+            background: #667eea;
+            color: white;
+            padding: 8px 15px;
+            border-radius: 20px;
+            font-weight: bold;
+            min-width: 100px;
+            text-align: center;
+        }
+        .activity-desc {
+            flex: 1;
+            margin-left: 20px;
+            font-size: 1.1rem;
+        }
+        .carbon-badge {
+            background: #4CAF50;
+            color: white;
+            padding: 5px 10px;
+            border-radius: 15px;
+            font-size: 0.9rem;
+        }
+        .transport-icon {
+            width: 30px;
+            height: 30px;
+            margin-right: 10px;
+            opacity: 0.8;
+        }
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: #667eea;
+        }
+        .spinner {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #667eea;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 20px;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }n            100% { transform: rotate(360deg); }n        }
+        @media (max-width: 768px) {
+            .container { padding: 15px; }
+            h1 { font-size: 2rem; }
+            .stats-grid { grid-template-columns: 1fr; }
+            .action-buttons { flex-direction: column; }
+            .map-container { height: 300px; }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <header>
+            <h1>🕌 DreamTrip AI</h1>
+            <p class="tagline">Tamil Nadu's First AI-Powered Travel Assistant</p>
+            <p>Plan your perfect Tamil Nadu journey in தமிழ் or English</p>
+        </header>
+
+        <!-- Language Toggle -->
+        <div class="language-toggle">
+            <button class="lang-btn active" onclick="setLanguage('ta')">தமிழ்</button>
+            <button class="lang-btn" onclick="setLanguage('en')">English</button>
+            <button class="lang-btn" onclick="setLanguage('voice')">🎤 Voice</button>
+        </div>
+
+        <!-- Input Section -->
+        <div class="input-section">
+            <div class="example-buttons">
+                <span class="example-btn" onclick="useExample(1)">அமைதியான கோவில், குளிர் காற்று</span>
+                <span class="example-btn" onclick="useExample(2)">Blue mountains with morning mist</span>
+                <span class="example-btn" onclick="useExample(3)">Ancient temple at golden hour</span>
+                <span class="example-btn" onclick="useExample(4)">சுற்றுலா விருந்து மற்றும் நடனம்</span>
+            </div>
+
+            <textarea id="dreamInput" placeholder="உங்கள் கனவுப் பயணத்தை விவரிக்கவும்...\nஅல்லது Describe your dream trip in English..."></textarea>
+
+            <div class="action-buttons">
+                <button class="btn btn-primary" onclick="generateTrip()">
+                    <span>✨</span> Generate Smart Itinerary
+                </button>
+                <button class="btn btn-secondary" onclick="clearInput()">
+                    <span>🗑️</span> Clear
+                </button>
+                <button class="btn btn-secondary" onclick="toggleVoiceInput()">
+                    <span>🎤</span> Voice Input
+                </button>
+                <button class="btn btn-secondary" onclick="toggleAdvanced()">
+                    <span>⚙️</span> Advanced
+                </button>
+            </div>
+
+            <!-- Advanced Options (Hidden by default) -->
+            <div id="advancedOptions" style="display: none; margin-top: 20px; padding: 20px; background: white; border-radius: 10px;">
+                <h3>Advanced Settings</h3>
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px; margin-top: 15px;">
+                    <div>
+                        <label>Duration (days):</label>
+                        <input type="range" id="durationSlider" min="1" max="10" value="3" style="width: 100%;">
+                        <span id="durationValue">3 days</span>
+                    </div>
+                    <div>
+                        <label>Budget:</label>
+                        <select id="budgetSelect" style="width: 100%; padding: 8px; border-radius: 5px;">
+                            <option value="budget">Budget (₹1000-3000)</option>
+                            <option value="midrange" selected>Mid-range (₹3000-7000)</option>
+                            <option value="luxury">Luxury (₹7000+)</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label>Carbon Preference:</label>
+                        <select id="carbonSelect" style="width: 100%; padding: 8px; border-radius: 5px;">
+                            <option value="low">Low Carbon</option>
+                            <option value="balanced" selected>Balanced</option>
+                            <option value="fastest">Fastest Route</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Loading Spinner -->
+        <div id="loading" class="loading" style="display: none;">
+            <div class="spinner"></div>
+            <p>AI is planning your perfect Tamil Nadu journey...</p>
+            <p>Analyzing: <span id="analyzingText"></span></p>
+        </div>
+
+        <!-- Results Section -->
+        <div id="resultsSection" class="results-section">
+            <!-- Stats -->
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <h3>💰 Estimated Cost</h3>
+                    <p id="totalCost">₹4,200</p>
+                </div>
+                <div class="stat-card">
+                    <h3>🌿 Carbon Footprint</h3>
+                    <p id="carbonFootprint">28.5 kg</p>
+                </div>
+                <div class="stat-card">
+                    <h3>📍 Destinations</h3>
+                    <p id="destinationCount">5 Places</p>
+                </div>
+                <div class="stat-card">
+                    <h3>⏱️ Duration</h3>
+                    <p id="tripDuration">3 Days</p>
+                </div>
+            </div>
+
+            <!-- Carbon Meter -->
+            <div>
+                <h3>Carbon Efficiency</h3>
+                <div class="carbon-meter">
+                    <div class="carbon-fill" id="carbonBar"></div>
+                </div>
+                <div class="carbon-labels">
+                    <span>Excellent</span>
+                    <span>Good</span>
+                    <span>Average</span>
+                    <span>Poor</span>
+                </div>
+                <p>Your trip is <span id="carbonEfficiency" style="font-weight: bold; color: #4CAF50;">35% greener</span> than average Tamil Nadu itineraries.</p>
+            </div>
+
+            <!-- Map -->
+            <div>
+                <h3>📍 Your Journey Map</h3>
+                <div id="map" class="map-container"></div>
+            </div>
+
+            <!-- Itinerary -->
+            <div class="itinerary-days">
+                <h2>📅 Your Day-by-Day Itinerary</h2>
+                <div id="itineraryDays"></div>
+            </div>
+
+            <!-- Action Buttons -->
+            <div class="action-buttons" style="margin-top: 40px;">
+                <button class="btn btn-primary" onclick="downloadItinerary()">
+                    <span>📥</span> Download Itinerary (PDF)
+                </button>
+                <button class="btn btn-secondary" onclick="shareItinerary()">
+                    <span>📤</span> Share with Friends
+                </button>
+                <button class="btn btn-secondary" onclick="bookNow()">
+                    <span>🎫</span> Book Now
+                </button>
+            </div>
+        </div>
+
+        <!-- Footer -->
+        <footer style="margin-top: 60px; text-align: center; color: #7f8c8d; padding-top: 20px; border-top: 1px solid #e0e0e0;">
+            <p>🚀 Powered by Zapier AI Automation | 🇮🇳 Made for Tamil Nadu Tourism</p>
+            <p>🌿 Eco-friendly routing | 🗣️ Tamil Language Support | 🎯 Festival-aware planning</p>
+        </footer>
+    </div>
+
+    <!-- JavaScript -->
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script>
+        // ========== CONFIGURATION ==========n        const CONFIG = {
+            ZAPIER_WEBHOOK_URL: "YOUR_ZAPIER_WEBHOOK_URL_HERE", // Replace in Step 11n            TAMIL_NADU_CENTER: [10.7915, 79.1378],
+            DEFAULT_ZOOM: 7,
+            MAP_TILES: 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png'n        };
+
+        // ========== GLOBAL VARIABLES ==========n        let currentLanguage = 'ta';
+        let map = null;
+        let markers = [];
+        let currentItinerary = null;
+        let voiceRecognition = null;
+
+        // ========== INITIALIZATION ==========n        document.addEventListener('DOMContentLoaded', function() {
+            initMap();
+            updateDurationValue();
+
+            // Initialize voice recognition if availablen            if ('webkitSpeechRecognition' in window) {
+                voiceRecognition = new webkitSpeechRecognition();
+                voiceRecognition.continuous = false;
+                voiceRecognition.interimResults = false;
+                voiceRecognition.lang = 'ta-IN';
+
+                voiceRecognition.onresult = function(event) {
+                    const transcript = event.results[0][0].transcript;
+                    document.getElementById('dreamInput').value = transcript;
+                };
+            }
+        });
+
+        // ========== MAP FUNCTIONS ==========n        function initMap() {
+            map = L.map('map').setView(CONFIG.TAMIL_NADU_CENTER, CONFIG.DEFAULT_ZOOM);
+            L.tileLayer(CONFIG.MAP_TILES, {
+                attribution: '© OpenStreetMap contributors'n            }).addTo(map);
+        }
+
+        function addMarkers(locations) {
+            // Clear existing markersn            markers.forEach(marker => map.removeLayer(marker));
+            markers = [];
+
+            // Add new markersn            locations.forEach((loc, index) => {
+                const marker = L.marker([loc.lat, loc.lng])
+                    .addTo(map)
+                    .bindPopup(`<b>${index + 1}. ${loc.name}</b><br>${loc.description || ''}`);
+                markers.push(marker);
+            });
+
+            // Fit bounds to show all markersn            if (locations.length > 0) {
+                const group = new L.featureGroup(markers);
+                map.fitBounds(group.getBounds().pad(0.1));
+            }
+        }
+
+        // ========== LANGUAGE FUNCTIONS ==========n        function setLanguage(lang) {
+            currentLanguage = lang;
+            document.querySelectorAll('.lang-btn').forEach(btn => btn.classList.remove('active'));
+            event.target.classList.add('active');
+
+            if (lang === 'voice') {
+                toggleVoiceInput();
+            }
+        }
+
+        function toggleVoiceInput() {
+            if (!voiceRecognition) {
+                alert('Voice input not supported in your browser');
+                return;
+            }
+
+            voiceRecognition.lang = currentLanguage === 'ta' ? 'ta-IN' : 'en-IN';
+            voiceRecognition.start();
+
+            // Show recording indicatorn            const input = document.getElementById('dreamInput');
+            input.placeholder = '🎤 Listening... Speak now...';
+            setTimeout(() => {
+                input.placeholder = currentLanguage === 'ta'n                    ? 'உங்கள் கனவுப் பயணத்தை விவரிக்கவும்...'
+                    : 'Describe your dream trip in English...';
+            }, 3000);
+        }
+
+        // ========== EXAMPLE FUNCTIONS ==========n        function useExample(num) {
+            const examples = {
+                1: "அமைதியான கோவில், குளிர் காற்று, பழமையான கட்டிடக்கலை",
+                2: "Blue mountains with morning mist and tea plantations",
+                3: "Ancient temple at golden hour with traditional music",
+                4: "சுற்றுலா விருந்து மற்றும் நடனம், கிராமிய கலைகள்"n            };
+            document.getElementById('dreamInput').value = examples[num];
+        }
+
+        function clearInput() {
+            document.getElementById('dreamInput').value = '';
+        }
+
+        function toggleAdvanced() {
+            const adv = document.getElementById('advancedOptions');
+            adv.style.display = adv.style.display === 'none' ? 'block' : 'none';
+        }
+
+        function updateDurationValue() {
+            const slider = document.getElementById('durationSlider');
+            const value = document.getElementById('durationValue');
+            value.textContent = `${slider.value} day${slider.value > 1 ? 's' : ''}`;n        }
+
+        // ========== MAIN AI FUNCTION ==========n        async function generateTrip() {
+            const userInput = document.getElementById('dreamInput').value.trim();
+
+            if (!userInput) {
+                alert('Please describe your dream trip first!');
+                return;
+            }
+
+            // Show loadingn            document.getElementById('loading').style.display = 'block';
+            document.getElementById('resultsSection').style.display = 'none';
+
+            // Show analyzing textn            const analyzingText = document.getElementById('analyzingText');
+            const phrases = [
+                "Understanding Tamil language context...",
+                "Checking Tamil Nadu festival calendar...",
+                "Calculating optimal carbon-efficient routes...",
+                "Analyzing SETC bus schedules...",
+                "Finding authentic local experiences..."n            ];
+            let i = 0;
+            const interval = setInterval(() => {
+                analyzingText.textContent = phrases[i % phrases.length];
+                i++;
+            }, 2000);
+
+            try {
+                // Get user preferencesn                const duration = document.getElementById('durationSlider').value;
+                const budget = document.getElementById('budgetSelect').value;
+                const carbonPref = document.getElementById('carbonSelect').value;
+
+                // Prepare data for Zapiern                const tripData = {
+                    user_input: userInput,
+                    language: currentLanguage,
+                    duration_days: parseInt(duration),
+                    budget_level: budget,
+                    carbon_preference: carbonPref,
+                    timestamp: new Date().toISOString(),
+                    features: ['tamil_nlp', 'carbon_calc', 'festival_aware', 'local_transport']n                };
+
+                // ========== ZAPIER INTEGRATION ==========n                // REPLACE THIS URL WITH YOUR ACTUAL ZAPIER WEBHOOK URLn                const ZAPIER_URL = CONFIG.ZAPIER_WEBHOOK_URL;
+
+                const response = await fetch(ZAPIER_URL, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(tripData)
+                });
+
+                if (!response.ok) {
+                    throw new Error(`Zapier error: ${response.status}`);
+                }
+
+                const aiResponse = await response.json();
+
+                // ========== FOR DEMO (If Zapier not configured) ==========n                // Remove this block when Zapier is connectedn                if (!aiResponse || aiResponse.error) {
+                    console.log("Using demo data (Zapier not configured)");
+                    currentItinerary = getDemoItinerary(userInput, duration, budget);
+                } else {
+                    currentItinerary = aiResponse;
+                }
+
+                clearInterval(interval);
+                document.getElementById('loading').style.display = 'none';
+
+                // Display resultsn                displayResults(currentItinerary);
+
+            } catch (error) {
+                console.error('Error:', error);
+                clearInterval(interval);
+                document.getElementById('loading').style.display = 'none';
+
+                // Show demo data if API failsn                currentItinerary = getDemoItinerary(userInput);
+                displayResults(currentItinerary);
+
+                alert('Note: Connected to demo mode. Connect Zapier for real AI processing!');
+            }
+        }
+
+        // ========== RESULTS DISPLAY ==========n        function displayResults(data) {
+            // Update statsn            document.getElementById('totalCost').textContent = `₹${data.total_cost || 4200}`;n            document.getElementById('carbonFootprint').textContent = `${data.carbon_footprint || 28.5} kg`;
+            document.getElementById('destinationCount').textContent = `${data.destinations_count || 5} Places`;
+            document.getElementById('tripDuration').textContent = `${data.duration_days || 3} Days`;
+
+            // Update carbon metern            const carbonPercent = Math.min(100, (data.carbon_efficiency || 65));
+            document.getElementById('carbonBar').style.width = `${carbonPercent}%`;
+            document.getElementById('carbonEfficiency').textContent = `${100 - carbonPercent}% greener`;
+            document.getElementById('carbonEfficiency').style.color = carbonPercent <= 30 ? '#4CAF50' :
+                                                                     carbonPercent <= 60 ? '#FFC107' : '#F44336';
+
+            // Update mapn            if (data.locations && Array.isArray(data.locations)) {
+                addMarkers(data.locations);
+            }
+
+            // Update itineraryn            const itineraryDays = document.getElementById('itineraryDays');
+            itineraryDays.innerHTML = '';
+
+            if (data.itinerary && data.itinerary.days) {
+                data.itinerary.days.forEach((day, index) => {
+                    const dayCard = document.createElement('div');
+                    dayCard.className = 'day-card';
+                    dayCard.innerHTML = `
+                        <h3>📅 Day ${index + 1}: ${day.title || 'Exploring Tamil Nadu'}</h3>
+                        <div class="activities">
+                            ${(day.activities || []).map(activity => `
+                                <div class="activity">
+                                    <span class="time-badge">${activity.time || 'Morning'}</span>
+                                    <span class="activity-desc">${activity.description || 'Activity'}</span>
+                                    ${activity.carbon ? `<span class="carbon-badge">🌿 ${activity.carbon} kg</span>` : ''}
+                                    ${activity.transport ? `<img src="https://cdn-icons-png.flaticon.com/512/3097/3097140.png" class="transport-icon" title="${activity.transport}">` : ''}
+                                </div>
+                            `).join('')}
+                        </div>
+                    `;
+                    itineraryDays.appendChild(dayCard);
+                });
+            }
+
+            // Show results sectionn            document.getElementById('resultsSection').style.display = 'block';
+            window.scrollTo({ top: document.getElementById('resultsSection').offsetTop - 100, behavior: 'smooth' });n        }
+
+        // ========== DEMO DATA (Backup when Zapier not connected) ==========n        function getDemoItinerary(input, duration = 3, budget = 'midrange') {
+            const isTamil = /[\u0B80-\u0BFF]/.test(input);
+
+            return {
+                total_cost: budget === 'budget' ? 2800 : budget === 'luxury' ? 8500 : 4200,
+                carbon_footprint: 25.8,
+                carbon_efficiency: 35,
+                destinations_count: 5,
+                duration_days: duration,
+                locations: [
+                    { lat: 9.9195, lng: 78.1193, name: 'Meenakshi Temple', description: 'Ancient temple complex' },
+                    { lat: 11.0168, lng: 76.9558, name: 'Ooty', description: 'Queen of Hill Stations' },
+                    { lat: 8.0883, lng: 77.5385, name: 'Kanyakumari', description: 'Southern tip of India' },
+                    { lat: 10.9418, lng: 79.8083, name: 'Thanjavur Temple', description: 'UNESCO World Heritage' },
+                    { lat: 13.0827, lng: 80.2707, name: 'Marina Beach', description: 'Longest urban beach' }n                ],
+                itinerary: {
+                    days: Array.from({length: duration}, (_, i) => ({
+                        title: isTamil ? ['திருக்கோயில் சுற்றுப்பயணம்', 'மலைவாசம்', 'கடலோர அனுபவம்'][i] || 'பயண நாள்' :
+                                       ['Temple Exploration', 'Hill Station Visit', 'Coastal Experience'][i] || 'Travel Day',
+                        activities: [
+                            { time: '8:00 AM', description: isTamil ? 'காலை உணவு (இட்லி, தோசை)' : 'Breakfast (Idli, Dosa)', transport: 'Local Restaurant' },
+                            { time: '10:00 AM', description: isTamil ? 'முக்கிய கோவில் பார்வை' : 'Main temple visit', carbon: 0.5, transport: 'Walking' },
+                            { time: '1:00 PM', description: isTamil ? 'மதிய உணவு (சைவ சாப்பாடு)' : 'Lunch (Vegetarian meal)', transport: 'Local Dhaba' },
+                            { time: '3:00 PM', description: isTamil ? 'கலை மற்றும் கைவினை கடை பார்வை' : 'Art and craft shopping', carbon: 0.2, transport: 'Auto' },
+                            { time: '6:00 PM', description: isTamil ? 'சூரிய அஸ்தமனக் காட்சி' : 'Sunset viewing', carbon: 0.3, transport: 'Bus' },
+                            { time: '8:00 PM', description: isTamil ? 'பாரம்பரிய நாட்டுப்புற நடனம்' : 'Traditional folk dance show', transport: 'Cultural Center' }n                        ]
+                    }))
+                },
+                features: {
+                    tamil_language: isTamil,
+                    carbon_optimized: true,
+                    festival_aware: true,
+                    local_transport: 'SETC Bus + Auto',
+                    eco_friendly: true
+                }
+            };
+        }
+
+        // ========== UTILITY FUNCTIONS ==========n        function downloadItinerary() {
+            alert('Itinerary download would generate PDF with all details.\n(Connect to PDF generation service)');
+        }
+
+        function shareItinerary() {
+            if (navigator.share) {
+                navigator.share({
+                    title: 'My Tamil Nadu Itinerary',
+                    text: 'Check out my AI-planned Tamil Nadu trip!',
+                    url: window.location.href
+                });
+            } else {
+                alert('Share link copied to clipboard!\nPaste to share with friends.');
+            }
+        }
+
+        function bookNow() {
+            alert('Redirecting to booking partners...\n(Integrate with MakeMyTrip, Yatra, etc.)');
+        }
+
+        // Initialize duration slidern        document.getElementById('durationSlider').addEventListener('input', updateDurationValue);
+    </script>
+</body>
+</html>
+"""
+
+display.display(display.HTML(html_content))
