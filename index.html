@@ -119,7 +119,7 @@ async function generate(){
   resDiv.innerHTML=currentLang==="ta"?"AI உங்கள் பயணத்தை தயாரிக்கிறது...":"AI is generating your itinerary...";
 
   try{
-    const response=await fetch("https://api.openai.com/v1/chat/completions",{
+    const response=await fetch("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",{
       method:"POST",
       headers:{"Content-Type":"application/json","Authorization":"Bearer YOUR_OPENAI_API_KEY"},
       body:JSON.stringify({model:"gpt-4",messages:[{role:"system",content:"You are a Tamil Nadu travel planner."},{role:"user",content:`Generate a ${days}-day ${currentLang==="ta"?"Tamil":"English"} itinerary for: ${text}. Budget: ${budget}. Carbon: ${carbon}. Include locations with lat/lng.`}],max_tokens:1000})
